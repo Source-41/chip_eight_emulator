@@ -1,0 +1,6 @@
+[package]
+name = "chip_eight"
+version = "0.1.0"
+authors = ["Source"]
+
+[dependencies]
