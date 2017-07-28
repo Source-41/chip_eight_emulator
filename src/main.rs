@@ -1,4 +1,4 @@
-const CHIP8_FONTSET:[u8; 80] = [
+const CHIP8_FONTSET:[u16; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -30,14 +30,14 @@ struct Chip {
     op_code: u16,
     program_counter: u16,
     index_register: u16,
-    memory: [u8; 4096],
-    V: [u8; 16],
-    gfx: [u8; 64 * 32],
-    delay_timer: u8,
-    sound_timer: u8,
+    memory: [u16; 4096],
+    V: [u16; 16],
+    gfx: [u16; 64 * 32],
+    delay_timer: u16,
+    sound_timer: u16,
     stack: [u16; 16],
     stack_pointer: u16,
-    key: [u8; 16],
+    key: [u16; 16],
 }
 
 impl Chip {
@@ -59,15 +59,16 @@ impl Chip {
         }
     }
 
-    fn load_fontset() -> [u8; 4096] {
-        let mut loaded_memory = [0; 4096];
+    fn load_fontset() -> [u16; 4096] {
+        let mut loaded_memory = [0u16; 4096];
         for i in 0..80 {
             loaded_memory[i] = CHIP8_FONTSET[i];
         }
         loaded_memory
     }
-    fn emulate_cycle() {
+    fn emulate_cycle(&mut self) {
         // Fetch Opcode
+        self.op_code = self.memory[self.program_counter as usize] << 8 | self.memory[(self.program_counter + 1u16) as usize];
         // Decode Opcode
         // Execute Opcode
 
