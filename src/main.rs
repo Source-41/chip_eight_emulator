@@ -70,6 +70,12 @@ impl Chip {
         // Fetch Opcode
         self.op_code = self.memory[self.program_counter as usize] << 8 | self.memory[(self.program_counter + 1u16) as usize];
         // Decode Opcode
+        match self.op_code {
+            0xA000 => {
+                self.index_register = self.op_code & 0x0FFF;
+            },
+            _ => println!("Unknown op_code: 0x{}", self.op_code),
+        }
         // Execute Opcode
 
         // Update Timers
