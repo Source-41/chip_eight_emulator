@@ -3,6 +3,9 @@ use std::io::Read;
 use std::io::prelude::*;
 use std::env;
 
+mod display;
+use display::Display;
+
 const CHIP8_FONTSET:[u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -44,7 +47,7 @@ struct Chip {
     delay_timer: u8,
     sound_timer: u8,
     key: [u16; 16],
-    gfx: [u16; 64 * 32],
+    pub display: Box<Display>
 }
 
 impl Chip {
@@ -61,8 +64,8 @@ impl Chip {
             delay_timer: 0,
             sound_timer: 0,
             key: [0; 16],
-            gfx: [0; 64 *32],
-            stack: [0; 16]
+            stack: [0; 16],
+            display: Box::new(Display::new())
         }
     }
 
@@ -157,28 +160,105 @@ impl Chip {
                 self.program_counter += 2;
             },
             0x8000 => {
-
+                match self.op_code & 0x000F {
+                    0 => {
+                        // Move
+                    },
+                    1 => {
+                        // OR
+                    },
+                    2 => {
+                        // AND
+                    },
+                    3 => {
+                        // Xor
+                    },
+                    4 => {
+                        // Add
+                    },
+                    5 => {
+                        // Sub
+                    },
+                    6 => {
+                        // Shift Right
+                    },
+                    7 => {
+                        //Reverse Sub
+                    },
+                    0xE => {
+                        // Shift Left
+                    },
+                    _ => {
+                        println!("Unrecognized op_code: {}", self.op_code);
+                    }
+                }
             },
             0x9000 => {
+                // Skip if VX != VY
                 self.program_counter += if self.V[self.op_x()] != self.V[self.op_y()] { 4 } else { 2 }
             },
             0xA000 => {
-
+                //Load index_counter
             },
             0xB000 => {
-
+                //Jump + Zero
             },
             0xC000 => {
-
+                // Random
             },
             0xD000 => {
-
+                // Draw
             },
             0xE000 => {
-
+                let V = self.V[self.op_x()] as usize;
+                self.program_counter += match self.op_code & 0x00FF {
+                    0x9E => {
+                        // Skip if Pressed
+                        0
+                    },
+                    0xA1 => {
+                        // Skip if not Pressed
+                        0
+                    },
+                    _ => {
+                        println!("op_code not recognized: {}", self.op_code);
+                        0
+                    }
+                }
             },
             0xF000 => {
-
+                match self.op_code & 0x00FF {
+                    0x07 => {
+                        // Load Delay Timer
+                    },
+                    0x0A => {
+                        // Wait for Keypress
+                    },
+                    0x15 => {
+                        // Set delay_timer
+                    },
+                    0x18 => {
+                        // Set sound_timer
+                    },
+                    0x1E => {
+                        // Add to index_counter
+                    },
+                    0x29 => {
+                        // Load sprite
+                    },
+                    0x33 => {
+                        // BCD Representation
+                    },
+                    0x55 => {
+                        // Store Registers
+                    },
+                    0x65 => {
+                        // Load Registers
+                    },
+                    _ => {
+                        println!("Unknown op_code: {}", self.op_code);
+                    }
+                }
             },
             _ => {
                 println!("Op_code doesn't exist: {}", self.op_code);
