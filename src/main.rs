@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::Read;
+use std::io::prelude::*;
 use std::env;
 
 const CHIP8_FONTSET:[u8; 80] = [
@@ -86,23 +87,21 @@ impl Chip {
     fn load_game(&mut self, game_name: &'static str) {
         let mut path = env::current_dir().unwrap();
         path.push(game_name.trim());
-        println!("Path: {:?}", path);
         let mut reader = File::open(&path).unwrap();
-        self.load_to_memory(&mut reader);
+        let mut game_data = Vec::new();
+        reader.read_to_end(&mut game_data).expect("Failure to read file");
+
+        self.load_to_memory(&mut game_data);
     }
 
-    fn load_to_memory(&mut self, reader: &mut File) {
-        let mut buffer = [0; 1];
-        match reader.read(&mut buffer) {
-            Ok(value) => {
-                self.memory[self.program_counter] = value as u8;
-                self.program_counter += 1;
-                self.load_to_memory(reader)
-            },
-            Err(e) => {
-                self.program_counter = 0x200
-            }
+    fn load_to_memory(&mut self, game_data: &mut Vec<u8>) {
+
+        for (i, byte) in game_data.iter().enumerate() {
+            self.memory[self.program_counter] = byte.clone();
+            self.program_counter += 1;
         }
+
+        self.program_counter = 0x200;
     }
 
     fn fetch_opcode(&mut self) {
