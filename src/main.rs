@@ -3,9 +3,6 @@ use std::io::Read;
 use std::io::prelude::*;
 use std::env;
 
-mod display;
-use display::Display;
-
 const CHIP8_FONTSET:[u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -46,8 +43,8 @@ struct Chip {
     stack_pointer: usize,
     delay_timer: u8,
     sound_timer: u8,
-    key: [u16; 16],
-    pub display: Box<Display>
+    // key: [u16; 16],
+    // pub display: Box<Display>
 }
 
 impl Chip {
@@ -63,9 +60,9 @@ impl Chip {
             stack_pointer: 0,
             delay_timer: 0,
             sound_timer: 0,
-            key: [0; 16],
+            // key: [0; 16],
             stack: [0; 16],
-            display: Box::new(Display::new())
+            // display: Box::new(Display::new())
         }
     }
 
