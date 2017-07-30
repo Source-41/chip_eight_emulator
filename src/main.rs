@@ -1,7 +1,10 @@
+extern crate rand;
+
 use std::fs::File;
 use std::io::Read;
 use std::io::prelude::*;
 use std::env;
+use rand::*;
 
 const CHIP8_FONTSET:[u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -76,12 +79,20 @@ impl Chip {
     fn emulate_cycle(&mut self) {
         // Fetch Opcode
         self.fetch_opcode();
-        self.execute_opcode();
+        
         // Decode Opcode
-
         // Execute Opcode
-
+        self.execute_opcode();
+        
         // Update Timers
+        if self.delay_timer > 0 { self.delay_timer -= 1; }
+
+        if self.sound_timer > 0 {
+            if self.sound_timer == 1 { println!("BEEEEP\n"); }
+            self.sound_timer -= 1;
+        }
+
+        for i in 0..10000 { }
     }
 
     fn load_game(&mut self, game_name: &'static str) {
@@ -116,6 +127,7 @@ impl Chip {
                         // Clear Display 
                     },
                     0x000E => {
+                        // Return
                         self.stack_pointer -= 1;
                         self.program_counter = self.stack[self.stack_pointer] as usize;
                     },
@@ -160,35 +172,51 @@ impl Chip {
                 match self.op_code & 0x000F {
                     0 => {
                         // Move
+                        self.V[self.op_x()] = self.V[self.op_y()];
                     },
                     1 => {
                         // OR
+                        self.V[self.op_x()] |= self.V[self.op_y()];
                     },
                     2 => {
                         // AND
+                        self.V[self.op_x()] &= self.V[self.op_y()];
                     },
                     3 => {
                         // Xor
+                        self.V[self.op_x()] ^= self.V[self.op_y()];
                     },
                     4 => {
                         // Add
+                        self.V[self.op_x()] += self.V[self.op_y()];
+                        self.V[15] = if self.V[self.op_x()] < self.V[self.op_y()] { 1 } else { 0 };
                     },
                     5 => {
                         // Sub
+                        self.V[15] = if self.V[self.op_y()] > self.V[self.op_x()] { 0 } else { 1 };
+                        self.V[self.op_x()] -= self.V[self.op_y()];
                     },
                     6 => {
                         // Shift Right
+                        self.V[15] = self.V[self.op_x()] & 0x1;
+                        self.V[self.op_x()] >>= 1;
                     },
                     7 => {
                         //Reverse Sub
+                        self.V[15] = if self.V[self.op_x()] > self.V[self.op_y()] { 0 } else { 1 };
+                        self.V[self.op_x()] = self.V[self.op_y()] - self.V[self.op_x()];
                     },
                     0xE => {
                         // Shift Left
+                        self.V[15] = self.V[self.op_x()] >> 7;
+                        self.V[self.op_x()] <<= 1;
                     },
                     _ => {
                         println!("Unrecognized op_code: {}", self.op_code);
                     }
                 }
+
+                 self.program_counter += 2;
             },
             0x9000 => {
                 // Skip if VX != VY
@@ -196,12 +224,17 @@ impl Chip {
             },
             0xA000 => {
                 //Load index_counter
+                self.index_register = self.op_n() as usize;
+                self.program_counter += 2;
             },
             0xB000 => {
                 //Jump + Zero
+                self.program_counter = (self.op_nnn() + (self.V[0] as u16)) as usize;
             },
             0xC000 => {
                 // Random
+                self.V[self.op_x()] = self.op_nn() & rand::random::<u8>();
+                self.program_counter += 2;
             },
             0xD000 => {
                 // Draw
@@ -227,35 +260,53 @@ impl Chip {
                 match self.op_code & 0x00FF {
                     0x07 => {
                         // Load Delay Timer
+                        self.V[self.op_x()] = self.delay_timer;
                     },
                     0x0A => {
                         // Wait for Keypress
                     },
                     0x15 => {
                         // Set delay_timer
+                        self.delay_timer = self.V[self.op_x()];
                     },
                     0x18 => {
                         // Set sound_timer
+                        self.sound_timer = self.V[self.op_x()];
                     },
                     0x1E => {
-                        // Add to index_counter
+                        // Add to index_register
+                        self.index_register += self.V[self.op_x()] as usize;
                     },
                     0x29 => {
                         // Load sprite
+                        self.index_register = (self.V[self.op_x()] as usize) * 5;
                     },
                     0x33 => {
                         // BCD Representation
+                        self.memory[self.index_register] = self.V[self.op_x()] / 100;
+                        self.memory[self.index_register + 1] = (self.V[self.op_x()] / 10) % 10;
+                        self.memory[self.index_register + 2] = (self.V[self.op_x()] % 100) % 10;
                     },
                     0x55 => {
                         // Store Registers
+                        for i in 0..self.op_x() + 1 {
+                            self.memory[self.index_register + i] = self.V[i]
+                        }
+                        self.index_register += self.op_x() + 1;
                     },
                     0x65 => {
                         // Load Registers
+                        for i in 0..self.op_x() + 1 {
+                            self.V[i] = self.memory[self.index_register + i]
+                        }
+
+                        self.index_register += self.op_x() + 1;
                     },
                     _ => {
                         println!("Unknown op_code: {}", self.op_code);
                     }
                 }
+                self.program_counter += 2;
             },
             _ => {
                 println!("Op_code doesn't exist: {}", self.op_code);
