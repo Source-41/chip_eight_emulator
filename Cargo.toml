@@ -2,6 +2,8 @@
 name = "chip_eight"
 version = "0.1.0"
 authors = ["Source"]
+build = "build.rs"
 
 [dependencies]
 rand = "0.3.16"
+sdl2 = "0.30.0"

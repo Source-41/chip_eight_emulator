@@ -1,10 +1,14 @@
 extern crate rand;
+extern crate sdl2;
 
 use std::fs::File;
 use std::io::Read;
 use std::io::prelude::*;
 use std::env;
 use rand::*;
+
+// mod display;
+// use display::Display;
 
 const CHIP8_FONTSET:[u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -47,7 +51,7 @@ struct Chip {
     delay_timer: u8,
     sound_timer: u8,
     // key: [u16; 16],
-    // pub display: Box<Display>
+    // pub display: Display<'a>
 }
 
 impl Chip {
@@ -65,7 +69,7 @@ impl Chip {
             sound_timer: 0,
             // key: [0; 16],
             stack: [0; 16],
-            // display: Box::new(Display::new())
+            // display: Display::new()
         }
     }
 
