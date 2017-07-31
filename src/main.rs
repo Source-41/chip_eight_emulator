@@ -7,8 +7,11 @@ use std::io::prelude::*;
 use std::env;
 use rand::*;
 
-// mod display;
-// use display::Display;
+mod display;
+mod keyboard;
+
+use display::Display;
+use keyboard::Keypad;
 
 const CHIP8_FONTSET:[u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -50,8 +53,8 @@ struct Chip {
     stack_pointer: usize,
     delay_timer: u8,
     sound_timer: u8,
-    // key: [u16; 16],
-    // pub display: Display<'a>
+    key: Keypad,
+    // pub display: Display
 }
 
 impl Chip {
@@ -67,7 +70,7 @@ impl Chip {
             stack_pointer: 0,
             delay_timer: 0,
             sound_timer: 0,
-            // key: [0; 16],
+            key: Keypad::new(),
             stack: [0; 16],
             // display: Display::new()
         }
