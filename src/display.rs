@@ -4,21 +4,19 @@ use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2;
 
-pub struct Display {
+pub struct Display<'a> {
     gfx: [[u8; 64]; 32],
     draw_flag: bool,
-    screen: Surface
+    screen: Surface<'a>
 }
 
 static scale: isize = 20;
 
-impl Display {
+impl<'a> Display<'a> {
     
-    pub fn new() -> Display {
-        let sdl_context = sdl2::init().unwrap();
-        let video_subsystem = sdl_context.video().unwrap();
+    pub fn new(context:&'a sdl2::Sdl) -> Display {
 
-        let window = video_subsystem.window("rust-sdl2 demo: Video", 64*scale, 32*scale)
+        let window = context.video_subsystem.window("rust-sdl2 demo: Video", 64*scale, 32*scale)
             .position_centered()
             .opengl()
             .build()
