@@ -2,10 +2,7 @@ use std::fs::File;
 use std::io::Read;
 use std::io::prelude::*;
 use std::env;
-use sdl2;
 use random;
-
-use display::Display;
 use keyboard::Keypad;
 
 const CHIP8_FONTSET:[u8; 80] = [
@@ -37,13 +34,12 @@ pub struct Chip {
     stack_pointer: usize,
     delay_timer: u8,
     sound_timer: u8,
-    pub key: Keypad,
-    pub display: Display<'a>
+    pub key: Keypad
 }
 
 impl Chip {
 
-    pub fn init(mut context: &'a sdl2::Sdl) -> Chip {
+    pub fn init() -> Chip {
         let loaded_memory = Chip::load_fontset();
         Chip {
             op_code: 0,
@@ -55,8 +51,7 @@ impl Chip {
             delay_timer: 0,
             sound_timer: 0,
             key: Keypad::new(),
-            stack: [0; 16],
-            display: Display::new(&mut context)
+            stack: [0; 16]
         }
     }
 
