@@ -4,6 +4,7 @@ use std::io::prelude::*;
 use std::env;
 use random;
 use keyboard::Keypad;
+use display::Display;
 
 const CHIP8_FONTSET:[u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -34,7 +35,8 @@ pub struct Chip {
     stack_pointer: usize,
     delay_timer: u8,
     sound_timer: u8,
-    pub key: Keypad
+    pub key: Keypad,
+    pub display: Display,
 }
 
 impl Chip {
@@ -51,7 +53,8 @@ impl Chip {
             delay_timer: 0,
             sound_timer: 0,
             key: Keypad::new(),
-            stack: [0; 16]
+            stack: [0; 16],
+            display: Display::new()
         }
     }
 
@@ -110,7 +113,9 @@ impl Chip {
             0x0000 => {
                 match self.op_code & 0x000F {
                     0x0000 => {
-                        // Clear Display 
+                        // Clear Display
+                        self.display.clear();
+                        self.program_counter += 2;
                     },
                     0x000E => {
                         // Return
@@ -224,17 +229,24 @@ impl Chip {
             },
             0xD000 => {
                 // Draw
+                let from = self.index_register;
+                let to = from + (self.op_n() as usize);
+                let x = self.V[self.op_x()];
+                let y = self.V[self.op_y()];
+
+                self.V[15] = self.display.draw(x as usize, y as usize, &self.memory[from..to]);
+                self.program_counter += 2;
             },
             0xE000 => {
                 let V = self.V[self.op_x()] as usize;
                 self.program_counter += match self.op_code & 0x00FF {
                     0x9E => {
                         // Skip if Pressed
-                        0
+                        if self.key.key_pressed(V) { 4 } else { 2 }
                     },
                     0xA1 => {
                         // Skip if not Pressed
-                        0
+                        if !self.key.key_pressed(V) { 4 } else { 2 }
                     },
                     _ => {
                         println!("op_code not recognized: {}", self.op_code);
